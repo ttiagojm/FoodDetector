@@ -22,9 +22,9 @@ Several technologies were used:
 # Screens
 |                       |                       |
 |-----------------------|-----------------------|
-| ![detect](imgs\detecao.png) | ![detect](imgs\detecao.png) |
-| ![management](imgs\management.png) | ![result](imgs\result.png)  |
-| ![tasks](imgs\tasks.png)|                       |
+| ![detect](imgs/detecao.png) | ![detect](imgs/detecao.png) |
+| ![management](imgs/management.png) | ![result](imgs/result.png)  |
+| ![tasks](imgs/tasks.png)|                       |
 
 # Credits
 This project was developed by [Gonçalo Rosa](https://github.com/GoncalojmRosa) and [Tiago Martins](https://github.com/ttiagojm) for a Distributed applications course in our Computer Engineering Degree
