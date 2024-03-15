@@ -17,7 +17,7 @@ Several technologies were used:
 * CodeProjectAI server with the YOLOv5 model and previously trained weights (the training is [in this](https://github.com/ttiagojm/GrocerEyeYOLOv5) repository)
 
 # Architecture
-![architecture](imgs\arch.png)
+![architecture](imgs/arch.png)
 
 # Screens
 |                       |                       |
