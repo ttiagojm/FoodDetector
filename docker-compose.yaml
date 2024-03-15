@@ -1,0 +1,114 @@
+version: '3.3'
+name: fooddetect
+services:        
+    db:
+        image: mysql:5.7
+        restart: always
+        environment:
+            MYSQL_DATABASE: 'db'
+            MYSQL_USER: 'user'
+            MYSQL_PASSWORD: 'password'
+            MYSQL_ROOT_PASSWORD: 'password'
+        
+        networks:
+            my-net:
+                ipv4_address: 172.16.1.6
+        ports:
+            - '3306:3306'
+        expose:
+            - '3306'
+        volumes:
+            - my-db:/var/lib/mysql
+
+    codeai-server:
+        hostname: codeprojectai
+        environment:
+            - PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            - ASPNETCORE_URLS=http://+:32168;http://+:5000
+            - LOGGING__CONSOLE__FORMATTERNAME=simple
+            - DOTNET_RUNNING_IN_CONTAINER=true
+            - DEBIAN_FRONTEND=noninteractive
+            - LANGUAGE=C
+            - LC_ALL=C
+            - LANG=C
+            - LC_CTYPE=C
+            - VERSION=2.4.7
+        volumes:
+            - ./MyCustomModels:/app/preinstalled-modules/ObjectDetectionYOLOv5-6.2/custom-models
+        working_dir: /app/server
+        ports:
+            - 32168:32168
+            - 32168:32168/udp
+        labels:
+            - Application=CodeProject.AI Server
+            - Description=CodeProject.AI Server with CPU-only processing.
+            - Publisher=CodeProject Solutions Inc
+            - Target=Generic Linux x86_64 CPU
+            - Version=2.4.7
+            - org.opencontainers.image.ref.name=ubuntu
+            - org.opencontainers.image.version=22.04
+        runtime: runc
+        image: codeproject/ai-server:2.4.7
+        networks:
+            my-net:
+                ipv4_address: 172.16.1.5
+            
+    naming:
+        build: ./naming-server
+        networks:
+            my-net:
+        ports:
+            - "8761:8761"
+    
+    gateway:
+        build: ./Api-Gateway
+        networks:
+            my-net:
+        ports:
+            - "8755:8755"
+        environment:
+            JAVA_OPTS: "-DEUREKA_SERVER_URL=http://naming:8761/eureka"
+        depends_on:
+            - naming
+            - db
+        
+    gestao:
+        build: ./Microservico-Gestao
+        networks:
+            my-net:
+        ports:
+            - "8020"
+        environment:
+            JAVA_OPTS: "-DEUREKA_SERVER_URL=http://naming:8761/eureka -DMYSQL=172.16.1.6"
+        depends_on:
+            - naming
+            - gateway
+            - db
+        deploy:
+            mode: replicated
+            replicas: 2
+    ia:
+        build: ./Microservico-IA
+        networks:
+            my-net:
+        ports:
+            - "8010"
+        deploy:
+            mode: replicated
+            replicas: 2
+        environment:
+            JAVA_OPTS: "-DEUREKA_SERVER_URL=http://naming:8761/eureka -DCODESERVER=172.16.1.5 -DMYSQL=172.16.1.6"
+        depends_on:
+            - naming
+            - gateway
+            - db
+
+networks:
+    my-net:
+        ipam:
+            config:
+                - subnet: 172.16.1.0/24
+                  gateway: 172.16.1.254
+
+volumes:
+    my-db:

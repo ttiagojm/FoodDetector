@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detecção de Imagem</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+  <style>
+    body {
+      background-color: #f8f9fa;
+    }
+
+    .container {
+      background-color: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-top: 50px;
+    }
+
+    .btn-primary,
+    .btn-success {
+      width: 100%;
+    }
+
+    #resultModal {
+      text-align: center;
+    }
+
+    #resultImage {
+      max-width: 100%;
+      height: auto;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="/">FoodDetect</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+          aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ml-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="/tarefas">Listar Tarefas</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="/index">Identificar Objetos</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" sec:authorize="hasRole('ROLE_ADMIN')" href="/users">Gerir Utilizadores</a>
+      </li>
+      <!-- Zona de Perfil -->
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
+           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          <i class="fas fa-user-circle"></i> Perfil
+        </a>
+        <div class="dropdown-menu dropdown-menu-right rounded shadow" aria-labelledby="profileDropdown">
+          <span class="dropdown-item-text">Nome: <b th:text="${#authentication.name}"></b></span>
+          <span class="dropdown-item-text">Role(s): <b
+                  th:text="${#authentication.authorities}"></b></span>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="/perfil">Detalhes Conta</a>
+          <a class="dropdown-item" href="/logout">Sair</a>
+        </div>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+
+
+<div class="container">
+  <h1 class="mb-4">Detecção de Imagem</h1>
+
+  <form action="/upload" method="post" enctype="multipart/form-data" th:action="@{/upload}">
+    <div class="form-group">
+      <label for="file">Selecione uma imagem:</label>
+      <div class="input-group">
+        <div class="custom-file">
+          <input type="file" class="custom-file-input" id="file" name="imagem" required>
+          <label class="custom-file-label" for="file">Escolher arquivo</label>
+        </div>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Enviar Imagem</button>
+  </form>
+
+  <hr>
+
+  <!-- Form para URL -->
+  <form action="/uploadByUrl" method="post" th:action="@{/uploadByUrl}">
+    <div class="form-group">
+      <label for="imageUrl">URL da Imagem:</label>
+      <input type="text" class="form-control" id="imageUrl" name="imageUrl" required>
+    </div>
+
+    <button type="submit" class="btn btn-success">Identificar Objeto</button>
+
+  </form>
+
+  <div th:if="${resultText != null and resultText != ''}">
+    <div class="modal" id="resultModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+
+          <!-- Modal Header -->
+          <div class="modal-header">
+            <h4 class="modal-title">Resultado da Identificação</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+
+          <!-- Modal Body -->
+          <div class="modal-body">
+            <p id="resultText" th:text="${resultText}"></p>
+            <p th:if="${predictions != null and not #lists.isEmpty(predictions)}">
+              Objetos identificados:
+              <ul>
+                <li th:each="prediction : ${predictions}">
+                  <strong>Label:</strong> <span th:text="${prediction.label}"></span><br>
+                  <strong>Confidence:</strong> <span th:text="${prediction.confidence}"></span><br>
+                  <strong>Bounding Box:</strong> <span th:text="'[' + ${prediction.x_min} + ', ' + ${prediction.y_min} + '), (' + ${prediction.x_max} + ', ' + ${prediction.y_max} + ']'"></span><br>
+                </li>
+              </ul>
+            </p>
+            <p th:if="${predictions == null or #lists.isEmpty(predictions)}">
+              Sem objectos identificados!
+            </p>
+            <img th:src="@{/uploads/{fileName}(fileName=${fileName})}" id="resultImage" alt="Resultado da Identificação">
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
+        integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
+        crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
+        integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+        crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
+        integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+        crossorigin="anonymous"></script>
+
+<script>
+  $(document).ready(function() {
+    $('#resultModal').modal('show');
+  });
+  $('.custom-file-input').on('change', function () {
+    var fileName = $(this).val().split('\\').pop();
+    $(this).next('.custom-file-label').html(fileName);
+  });
+
+  function showResult(resultText, imageUrl) {
+    console.log('Chamando showResult');
+    $('#resultText').text(resultText);
+    $('#resultImage').attr('src', imageUrl);
+    $('#resultModal').modal('show');
+  }
+
+</script>
+
+</body>
+</html>

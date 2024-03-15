@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"  xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Tarefas</title>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="/">FoodDetect</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+            aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="/tarefas">Listar Tarefas</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/index">Identificar Objetos</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" sec:authorize="hasRole('ROLE_ADMIN')" href="/users">Gerir Utilizadores</a>
+            </li>
+            <!-- Zona de Perfil -->
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
+                   data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-user-circle"></i> Perfil
+                </a>
+                <div class="dropdown-menu dropdown-menu-right rounded shadow" aria-labelledby="profileDropdown">
+                    <span class="dropdown-item-text">Nome: <b th:text="${#authentication.name}"></b></span>
+                    <span class="dropdown-item-text">Role(s): <b
+                            th:text="${#authentication.authorities}"></b></span>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="/perfil">Detalhes Conta</a>
+                    <a class="dropdown-item" href="/logout">Sair</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+
+<!-- Main Content -->
+<div class="m-4">
+    <h2 class="mb-4">Lista de Tarefas</h2>
+    <div class="table-responsive table-responsive-xl">
+        <table class="table table-bordered table-hover">
+            <thead class="thead-dark">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Nome ou URL da Imagem</th>
+                <th scope="col">Hash da Imagem</th>
+                <th scope="col">Objetos Identificados</th>
+                <th scope="col">Início da Tarefa</th>
+                <th scope="col">Fim da Tarefa</th>
+                <th scope="col">Duração</th>
+                <th scope="col">Estado</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="tarefa, iterStat : ${listaDeTarefas}">
+                <td th:text="${iterStat.index + 1}"></td>
+                <td>
+                    <img width="200px" height="200px" th:src="@{/uploads/{fileName}(fileName=${tarefa.getNomeOuUrlImagem()})}" id="resultImage" alt="Resultado da Identificação">
+                </td>
+                <td th:text="${tarefa.getHashImagem()}"></td>
+                <td>
+                <span th:if="${#lists.size(tarefa.objetosIdentificados) > 0}">
+                    <ul>
+                        <li th:each="prediction : ${tarefa.objetosIdentificados}">
+                            <span th:text="${prediction.label}"></span> -
+                            <span th:text="${prediction.confidence}"></span>
+                        </li>
+                    </ul>
+                </span>
+                    <span th:unless="${#lists.size(tarefa.objetosIdentificados) > 0}">N/a</span>
+                </td>
+                <td th:text="${tarefa.getInicioTarefa()}"></td>
+                <td th:text="${tarefa.getFimTarefa()}"></td>
+                <td th:text="${tarefa.getDuracao()}"></td>
+                <td th:text="${tarefa.getEstado()}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+
+<!-- Bootstrap and jQuery Scripts -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.8/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+</body>
+
+</html>
